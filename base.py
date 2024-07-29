@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import CSVLogger
 import numpy as np
-from utils import SlidingWindowDataset
+from makakicamp.utils import SlidingWindowDataset
 import warnings
 warnings.filterwarnings("ignore", ".*does not have many workers.*")
 
