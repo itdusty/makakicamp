@@ -2,10 +2,10 @@ import torch
 import torch.nn as nn
 import pandas as pd
 
-from base import TorchGenerator
-from gan import GANModule
+from makakicamp.base import TorchGenerator
+from makakicamp.gan import GANModule
 
-from transformer_blocks2 import Classification, TransformerEncoderBlock
+from makakicamp.transformer_blocks2 import Classification, TransformerEncoderBlock
 
 
 class GeneratorTransformerEncoderSequence(nn.Module):
