@@ -64,7 +64,8 @@ class TransformerGenerator(nn.Module):
             feed_dropout: float = 0.3,
             num_heads: int = 5,
             channels: int = 13,
-            depth: int = 5
+            depth: int = 5, 
+            transformer_dim: int = 15,
         ):
         super(TransformerGenerator, self).__init__()
         self.sequence_length = sequence_length
@@ -74,23 +75,26 @@ class TransformerGenerator(nn.Module):
         self.feed_dropout = feed_dropout
         self.num_heads = num_heads
         self.channels = channels
+        self.transformer_dim = transformer_dim
 
         #self.pos_embedding = nn.Parameter(torch.zeros(1, self.sequence_length, self.embedding_dim))
         self.transformer_encoder = GeneratorTransformerEncoderSequence(
             depth=depth,
-            embedding_dim=self.embedding_dim + self.conditional_dim,
+            embedding_dim=self.transformer_dim,#self.embedding_dim + self.conditional_dim,
             feed_dropout=self.feed_dropout,
             num_heads=self.num_heads,
             attention_dropout=self.attention_dropout
         )
         self.first_linear = nn.Linear(self.sequence_length, self.sequence_length * self.embedding_dim)
-        self.conv2d = nn.Conv2d(self.embedding_dim + self.conditional_dim, self.channels, kernel_size=1, padding=0)
+        self.second_linear = nn.Linear(self.sequence_length * (self.embedding_dim + self.conditional_dim), self.sequence_length * self.transformer_dim)
+        self.conv2d = nn.Conv2d(self.transformer_dim, self.channels, kernel_size=1, padding=0)#self.embedding_dim + self.conditional_dim, self.channels, kernel_size=1, padding=0)
 
     def forward(self, x: torch.tensor, condition: torch.tensor) -> torch.tensor:
         window_size = x.shape[1]
         x = x.view(-1, 1, window_size)
         x = self.first_linear(x).view(-1, self.sequence_length, self.embedding_dim)
         x = torch.cat([x, condition], dim=2)
+        x = self.second_linear(x)
         x = self.transformer_encoder(x)
         x = x.reshape(x.shape[0], 1, x.shape[1], x.shape[2])
         output = self.conv2d(x.permute(0, 3, 1, 2)).squeeze(2)
